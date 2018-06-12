@@ -95,7 +95,8 @@ defmodule RigOutboundGateway.Kafka.Sup do
         [
           certfile: config |> Keyword.fetch!(:ssl_certfile) |> resolve_path,
           keyfile: config |> Keyword.fetch!(:ssl_keyfile) |> resolve_path,
-          cacertfile: config |> Keyword.fetch!(:ssl_ca_certfile) |> resolve_path
+          password: String.to_charlist("test1234"),
+          cacertfile: config |> Keyword.fetch!(:ssl_ca_certfile) |> resolve_path,
         ]
       else
         false

@@ -6,8 +6,15 @@ HOST="*."
 DAYS=36500
 PASS="test1234"
 
-mkdir certs2
-cd certs2
+CUR_DIR="$(pwd)"
+CERTS_DIR="${CUR_DIR}/certs"
+PROJ_DIR="${CUR_DIR}/.."
+RIG_OUTBOUND_GATEWAY_PRIV_DIR="${PROJ_DIR}/apps/rig_outbound_gateway/priv"
+
+
+rm -f "${CERTS_DIR}"/*.{jks,p12,crt,csr,key,srl}
+mkdir -p "${CERTS_DIR}"
+cd "${CERTS_DIR}"
 
 # Generate self-signed server and client certificates
 ## generate CA
@@ -20,7 +27,7 @@ openssl req -newkey rsa:2048 -sha256 -keyout server.key -out server.csr -days $D
 openssl x509 -req -CA ca.crt -CAkey ca.key -in server.csr -out server.crt -days $DAYS -CAcreateserial
 
 ## generate client certificate request
-openssl req -newkey rsa:2048 -sha256 -keyout client.key -out client.csr -days $DAYS -nodes -subj "/C=AT/ST=Vienna/L=Vienna/O=RIG/OU=test/CN=$HOST"
+openssl req -newkey rsa:2048 -sha256 -passout pass:$PASS -keyout client.key -out client.csr -days $DAYS -subj "/C=AT/ST=Vienna/L=Vienna/O=RIG/OU=test/CN=$HOST"
 
 ## sign client certificate
 openssl x509 -req -CA ca.crt -CAkey ca.key -in client.csr -out client.crt -days $DAYS -CAserial ca.srl
@@ -34,3 +41,7 @@ keytool -importkeystore -destkeystore server.jks -srckeystore server.p12 -srcsto
 # Import CA into java truststore
 keytool -keystore truststore.jks -alias CARoot -importcert -file ca.crt -storepass $PASS -noprompt
 
+# Copy CA and client certificates to :rig_outbound_gateway's priv dir
+cp ca.crt "${RIG_OUTBOUND_GATEWAY_PRIV_DIR}"
+cp client.crt "${RIG_OUTBOUND_GATEWAY_PRIV_DIR}"
+cp client.key "${RIG_OUTBOUND_GATEWAY_PRIV_DIR}"
